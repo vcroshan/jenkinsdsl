@@ -1,55 +1,67 @@
-job('simple-maven-app') {
+freeStyleJob('simple-maven-app-freestyle'){
+    description ('Job created using Jobdsl plugin. This is a freestyle job')
+    parameters{
+        stringParam('Inputparam1',defaultValue ='hello',description = '')
+        stringParam('Inputparam2',defaultValue ='world',description = '')
+    }
     scm {
-        git { 
+        git {
             branch('master')
-            remote { 
-                credentials('MyGithubaccount')
-                github('vcroshan/simple-java-maven-app', protocol = 'https', host ='github.com')
-                }
+            remote {
+                credentials ('2d64d980-832f-4dd0-b22d-b5cb971e0a7a')
+                github('vcroshan/simple-java-maven-app', protocol = 'https', host = 'github.com')
+
+            }
         }
     }
     steps {
-        shell{
-            command('echo "WORKSPACE: ${WORKSPACE}";echo "Jenkins Job Name: ${JOB_NAME}"')
-        }
-        maven{
+        shell('echo $WORKSPACE;echo $BUILD_ID;echo $JOB_NAME;echo $JENKINS_HOME;echo $Inputparam1 $Inputparam2')
+        maven {
+            mavenInstallation('maven')
             goals('clean package')
-            mavenInstallation('Maven3.8')
             properties(skipTests: true)
-        } 
-        maven{
+        }
+         maven {
+            mavenInstallation('maven')
             goals('test')
-            mavenInstallation('Maven3.8')
-        } 
-        maven{
+            }
+        maven {
+            mavenInstallation('maven')
             goals('-gs settings.xml deploy')
-            mavenInstallation('Maven3.8')
-        } 
-     }
-     publishers{
+            }
+    }   
+    publishers {
         archiveArtifacts('target/*.jar')
-        archiveJunit('target/surefire-reports/**/*.xml')
-
-     }
+        archiveJunit('target/surefire-reports/TEST-com.mycompany.app.AppTest.xml') {
+             allowEmptyResults()
+            retainLongStdout()
+            healthScaleFactor(1.0)
+            testDataPublishers {
+            publishTestStabilityData()
+            }
+        }
+    }     
 }
 
 pipelineJob('simple-maven-app-pipeline') {
-    description ('This job is a pipelinejob')
-
+    parameters{
+        stringParam('Inputparam1',defaultValue ='hello',description = '')
+        stringParam('Inputparam2',defaultValue ='world',description = '')
+    }
+    
     definition{
-        cpsScm{
-                scm {
-                    git {
-                        branch('master')
-                        remote { 
-                            credentials('MyGithubaccount')
-                            github('vcroshan/simple-java-maven-app', protocol = 'https', host ='github.com')
-                        }
+        cpsScm {
+            scm {
+                git {
+                    branch('master')
+                    remote {
+                        credentials ('2d64d980-832f-4dd0-b22d-b5cb971e0a7a')
+                        github('vcroshan/simple-java-maven-app', protocol = 'https', host = 'github.com')
                     }
-                }
-                scriptPath('Jenkinsfile')
-                lightweight(lightweight = true)
+               }
             }
-
+            lightweight(lightweight = true)
+            scriptPath('Jenkinsfile')
+        }
     }
 }
